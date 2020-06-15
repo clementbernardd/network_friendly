@@ -79,29 +79,33 @@ class Environment(object) :
         # done is a boolean to say whether the user quits the game or not
         # We want to return the state where will be the user when we suggest him "action"
         # Knowing he is in the current 'state'
-        
+
         if (random.uniform(0, 1) < self.to_leave) :
             # The user stops to play
-            new_state,reward, done = None,None,True
+            reward = self.find_reward(action,state)
+            new_state,reward, done = None,reward,True
             return new_state,reward, done
         else :
-            
+
             # Else the user will choose among the contents
             if (random.uniform(0,1)< self.alpha ) :
-                
+
                 # Then the user chooses a content among the recommended contentss
                 new_state = action
                 reward = self.find_reward(action,state)
             else :
                 # The user picks a content randomly in the catalogue
-                
-                new_state = get_random_state(self.p0) 
+
+                new_state = get_random_state(self.p0)
                 reward = self.find_reward(action,state)
-                
-                
+
+
             done = False
-            
-        return new_state, reward, done
+
+        if (action == state ) :
+            return self.step(action, state)
+        else :
+            return new_state, reward, done
     
     def get_index_recommendation(self) :
         # Returns a matrix with all index of recommended content

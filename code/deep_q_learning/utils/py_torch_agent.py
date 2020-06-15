@@ -17,7 +17,7 @@ CATALOGUE_SIZE = 50
 
 dict_conversion = {'identity' : 1,'hot_encoding' : CATALOGUE_SIZE , 'u' : CATALOGUE_SIZE ,\
                    'u_hot' : CATALOGUE_SIZE, 'cached' : 1 ,\
-                  'rewards' : CATALOGUE_SIZE}
+                  'rewards' : CATALOGUE_SIZE,'valuable' :CATALOGUE_SIZE }
 
 '''Experience'''
 # A class to denote the experience which will be stored in the memory
@@ -91,6 +91,7 @@ class ConversionState(object) :
 
         self.CATALOGUE_SIZE = CATALOGUE_SIZE
         self.env = env
+        self.valuable_representation = self.valuable_actions(env)
         self.conversion = self.choose_function(name_function)
 
 
@@ -108,7 +109,51 @@ class ConversionState(object) :
             return self.convert_u_hot
         elif name_function == 'rewards' :
             return self.convert_reward
+        elif name_function == 'valuable' : 
+            return self.valuable
 
+        
+    def valuable_actions(self,env) : 
+        '''
+        Input : environment 
+        Output : A representation of the states where each action is increased by 1 when this action is a content either : 
+        - related
+        - cached
+        - Lead to a content cached
+        '''
+        
+        
+        states = torch.zeros((env.n_states,env.n_actions),dtype = torch.float)
+    
+        cost = env.cost
+    
+        for state in range(states.shape[0]) : 
+        
+            for i,x in enumerate(cost) : 
+                
+                if x == 0 : 
+                
+                    states[state,i] +=1
+    
+        related = env.recommended
+    
+        for i in range(states.shape[0]) : 
+        
+            for new_state in related[i] : 
+            
+                states[i,new_state] += 1
+            
+                for k in related[new_state] : 
+                    if cost[k] == 0 :
+                        states[i,new_state] += 1
+        
+        return states
+    
+    def valuable(self, state) : 
+        
+        return self.valuable_representation[state,:].view(1,CATALOGUE_SIZE)
+    
+    
 
     def identity(self, state) :
         '''
@@ -189,6 +234,15 @@ class ConversionState(object) :
             new_states[0,x] +=1
 
         return new_states
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
 
 
@@ -248,7 +302,7 @@ class Environment(object) :
 
         # It gives from the u matrix whether the action from the state is recommended or not
         if ((state is None) or (action is None) ):
-            return None
+            return 0
 
         recommended_matrix = self.recommended[state]
         is_cached = get_cached(action, self.cost)
@@ -362,7 +416,6 @@ class LinearModel(nn.Module) :
     def forward(self, x) :
         # Forward action to predict the outputs
         x = self.output(x)
-
         return x
 
 
@@ -376,7 +429,7 @@ class DQAgent(object) :
     Agent that uses Deep Neural Network to approximate the Q_matrix
 
     '''
-    def __init__(self, n_actions, state_dim , convert_state, mem_size, gamma, epsilon, lr ,model = None) :
+    def __init__(self, n_actions, state_dim , convert_state, mem_size, gamma, epsilon, lr ,model = None, constraints = False,related = None, optimizer = 'SGD') :
         """
         Inputs :
 
@@ -387,6 +440,8 @@ class DQAgent(object) :
         gamma : Discounted reward parameter
         epsilon : Epsilon-Greedy which decides whether we explore or exploit
         learning_rate : Learning_rate for the Neural Network
+        constraints : Boolean whether there are constraints on the recommendation
+        recommended : The related contents (if there are constraints)
 
         Attributes :
 
@@ -405,10 +460,13 @@ class DQAgent(object) :
         self.gamma = gamma
         self.epsilon = epsilon
         self.lr = lr
-        self.model = Model(state_dim ,n_actions) if model is None else model
+        self.model =  model 
         self.loss = nn.MSELoss()
-        self.optimizer = optim.Adam(self.model.parameters(), lr = lr)
+        self.optimizer = optim.SGD(self.model.parameters(), lr = lr) if optimizer == 'SGD' else optim.ASGD(self.model.parameters(), lr = lr)
         self.all_loss = []
+        self.distribution = np.zeros((n_actions,1))
+        self.constraints = constraints
+        self.related = related
 
     def memorize(self,state,action,reward,next_state,done) :
         # Store an experience in the Memory
@@ -426,7 +484,16 @@ class DQAgent(object) :
         '''
         if np.random.rand() <= self.epsilon:
             # Exploration
-            return random.randrange(self.n_actions)
+            if self.constraints : 
+                # Constraints on the recommendation 
+                
+                recommended_contents =  self.related[state]
+                index_state = random.randrange(0,len(recommended_contents),1)
+                action = recommended_contents[index_state]
+                
+            else : 
+                # No constraints on the recommendation
+                return random.randrange(self.n_actions)
         else :
             # Exploitation
             with torch.no_grad() :
@@ -444,6 +511,8 @@ class DQAgent(object) :
         batch_loss = 0
         for exp in minibatch:
 
+            self.distribution[exp.action,0] +=1
+            
             target = exp.reward
             if not exp.done:
                 target = (exp.reward + self.gamma * torch.max(self.model( self.convert_state(exp.next_state)  )).item())
@@ -453,10 +522,9 @@ class DQAgent(object) :
             # Replace the prediction by the target
             target_f[0,exp.action] = target
             # Fit the neural network with the new target to update the weights
-
             # Prediction
             prediction = self.model(self.convert_state(exp.state))
-
+            
             # Compute the loss
             current_loss = self.loss(target_f,prediction )
 
@@ -468,6 +536,7 @@ class DQAgent(object) :
 
             self.optimizer.zero_grad()
         self.all_loss.append(batch_loss)
+        return batch_loss/batch_size
 
 
     def save(self, name) :
@@ -486,7 +555,7 @@ class DQAgent(object) :
         q_table = torch.zeros(n, CATALOGUE_SIZE , dtype = torch.float )
         for i in range(n) :
             with torch.no_grad() :
-                q_table[i,:] = self.model(self.convert_state(states[i]))
+                q_table[i,:] = self.model(self.convert_state(states[i]))[0]
         return q_table
 
 
@@ -506,7 +575,7 @@ class DQAgent(object) :
 ''' Deep Q Learning Algorithm '''
 
 def deep_q_learning(env, state_dim, name_conversion_state, mem_size, gamma,\
-                    epsilon, learning_rate,max_iter,batch_size ,name, model = None) :
+                    epsilon, learning_rate,max_iter,batch_size ,name, model = None, constraints = False, optimizer = 'SGD') :
     """
     DEEP Q LEARNING ALGORITHM
 
@@ -521,7 +590,7 @@ def deep_q_learning(env, state_dim, name_conversion_state, mem_size, gamma,\
     learning_rate : Learning_rate for the Neural Network
     batch_size : The size of the batch which is used to train the network
     name : The name where will be saved the model
-
+    constraints : Boolean to say whether or not we add constraints on the recommendation
 
     Returns :
 
@@ -531,10 +600,10 @@ def deep_q_learning(env, state_dim, name_conversion_state, mem_size, gamma,\
     convert_state = ConversionState(env, name_conversion_state ).conversion
 
     # Initialisation of the agent
-    agent = DQAgent( env.n_actions, state_dim , convert_state ,mem_size, gamma, epsilon, learning_rate, model)
+    agent = DQAgent( env.n_actions, state_dim , convert_state ,mem_size, gamma, epsilon, learning_rate, model, constraints,env.recommended, optimizer)
     # List of all the rewards
     all_reward = []
-
+    all_loss = []
     # Fill the memory with random experiences
     if agent.memory.size() < batch_size :
 
@@ -544,6 +613,8 @@ def deep_q_learning(env, state_dim, name_conversion_state, mem_size, gamma,\
         state = env.refresh()
         tot_reward = 0
         done = False
+        tot_loss = 0
+        
         while not done :
             # Simulation until the user leaves
 
@@ -551,21 +622,25 @@ def deep_q_learning(env, state_dim, name_conversion_state, mem_size, gamma,\
             next_state, reward , done = env.step(state, action)
             # Add the experience in the memory
             agent.memorize(state, action, reward, next_state , done)
-
+            
             state = next_state
             tot_reward +=reward
 
             if done :
-                all_reward.append((e,tot_reward))
+                all_reward.append(tot_reward)
+                all_loss.append(tot_loss)
                 clear_output(True)
                 print("Episode: {}/{}, Reward : {}"
                           .format(e, max_iter, tot_reward))
-
+            
+                
 
             # Train the network
 
-            agent.learn(batch_size)
+            current_loss = agent.learn(batch_size)
+            tot_loss += current_loss
+            
 
 #     agent.save(name)
 
-    return agent, all_reward
+    return agent, all_reward, all_loss

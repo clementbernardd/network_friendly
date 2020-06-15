@@ -2,20 +2,19 @@ from utils.py_torch_agent import *
 ## Useful functions
 dict_conversion = {'identity' : 1,'hot_encoding' : CATALOGUE_SIZE , 'u' : CATALOGUE_SIZE ,\
                    'u_hot' : CATALOGUE_SIZE, 'cached' : 1 ,\
-                  'rewards' : CATALOGUE_SIZE}
+                  'rewards' : CATALOGUE_SIZE,'valuable' :CATALOGUE_SIZE }
 
 
 def plot_reward_loss(reward, loss, run_mean = 10) :
 
-    eps, rews = np.array(reward).T
 
     f, axs = plt.subplots(1,2,figsize=(22,8))
 
-    smoothed_rews = running_mean(rews, run_mean)
+    smoothed_rews = running_mean(reward, run_mean)
     smoothed_loss = running_mean(loss, run_mean)
 
 
-    axs[0].plot(eps[-len(smoothed_rews):], smoothed_rews)
+    axs[0].plot(smoothed_rews)
 
     axs[0].set_xlabel('Episode')
     axs[0].set_ylabel('Total Reward')
@@ -49,19 +48,17 @@ def test_agent(param_deep_Q ) :
 
 #
 
-def compare_conversion(name, param_deep_Q, epochs = [1, 100,1000 , 10000]) :
+def compare_conversion(name, param_deep_Q, epochs = [1, 100,1000 , 10000], linear = True) :
     '''
     Inputs :
 
     name : The name of the conversion to be done on the states
     param_deep_Q : The hyperparameters for the deep q learning algorithm
 
-    Output : Plot of the q_table before and after 100 and 1000 epochs and the list of agents
+    Output : Plot of the q_table before and after epochs and the list of agents
 
     '''
-    dict_conversion = {'identity' : 1,'hot_encoding' : CATALOGUE_SIZE , 'u' : CATALOGUE_SIZE ,\
-                       'u_hot' : CATALOGUE_SIZE, 'cached' : 1 ,\
-                      'rewards' : CATALOGUE_SIZE}
+    
     param_deep_Q['state_dim'] = dict_conversion[name]
     param_deep_Q['name_conversion_state'] = name
 
@@ -70,24 +67,34 @@ def compare_conversion(name, param_deep_Q, epochs = [1, 100,1000 , 10000]) :
     q_tables = [   ]
 
     rewards = []
+    all_loss = []
 
+    
+    
     for i in epochs :
         param_deep_Q['max_iter'] = i
-        param_deep_Q['model'] = LinearModel( param_deep_Q['state_dim'],CATALOGUE_SIZE)
-        agent, reward = deep_q_learning(**param_deep_Q)
+
+        if linear :
+            param_deep_Q['model'] = LinearModel( param_deep_Q['state_dim'],CATALOGUE_SIZE)
+        else :
+            param_deep_Q['model'] = Model( param_deep_Q['state_dim'],CATALOGUE_SIZE)
+
+
+        agent, reward,loss = deep_q_learning(**param_deep_Q)
         list_agents.append(agent)
+        all_loss.append(loss)
         q_table = agent.evaluate_q_values(np.arange(50))
         q_tables.append(q_table)
         rewards.append(reward)
 
 
 
-    return q_tables,rewards,list_agents
+    return q_tables,rewards,list_agents, all_loss
 
 
 
 
-def plot_result_deep_q(epochs,name, q_tables, rewards,list_agents, param_deep_Q, rm) :
+def plot_result_deep_q(epochs,name, q_tables, rewards,list_agents,all_loss, param_deep_Q, rm) :
     # Plot the q_table for the different epochs, the reward matrix and the rewards and loss
 
     n = len(epochs)
@@ -109,7 +116,7 @@ def plot_result_deep_q(epochs,name, q_tables, rewards,list_agents, param_deep_Q,
     print('Matrix reward')
     plot_q_table(get_matrix_rewards(param_deep_Q['env']))
 
-    plot_reward_loss(rewards[-1],list_agents[-1].all_loss,run_mean=rm)
+    plot_reward_loss(rewards[-1],all_loss[-1],run_mean=rm)
 
 
 
@@ -121,7 +128,7 @@ def plot_different_loss(all_loss, rewards, names, rm_loss, rm_reward, title ) :
 
     for i,loss in enumerate(all_loss) :
 
-        reward = [x[1] for x in rewards[i]]
+        reward = rewards[i]
 
         smoothed_loss = running_mean(loss, rm_loss)
         smoothed_reward = running_mean( reward , rm_reward)
