@@ -109,51 +109,51 @@ class ConversionState(object) :
             return self.convert_u_hot
         elif name_function == 'rewards' :
             return self.convert_reward
-        elif name_function == 'valuable' : 
+        elif name_function == 'valuable' :
             return self.valuable
 
-        
-    def valuable_actions(self,env) : 
+
+    def valuable_actions(self,env) :
         '''
-        Input : environment 
-        Output : A representation of the states where each action is increased by 1 when this action is a content either : 
+        Input : environment
+        Output : A representation of the states where each action is increased by 1 when this action is a content either :
         - related
         - cached
         - Lead to a content cached
         '''
-        
-        
+
+
         states = torch.zeros((env.n_states,env.n_actions),dtype = torch.float)
-    
+
         cost = env.cost
-    
-        for state in range(states.shape[0]) : 
-        
-            for i,x in enumerate(cost) : 
-                
-                if x == 0 : 
-                
+
+        for state in range(states.shape[0]) :
+
+            for i,x in enumerate(cost) :
+
+                if x == 0 :
+
                     states[state,i] +=1
-    
+
         related = env.recommended
-    
-        for i in range(states.shape[0]) : 
-        
-            for new_state in related[i] : 
-            
+
+        for i in range(states.shape[0]) :
+
+            for new_state in related[i] :
+
                 states[i,new_state] += 1
-            
-                for k in related[new_state] : 
+
+                for k in related[new_state] :
                     if cost[k] == 0 :
                         states[i,new_state] += 1
-        
+
         return states
-    
-    def valuable(self, state) : 
-        
+
+    def valuable(self, state) :
+
         return self.valuable_representation[state,:].view(1,CATALOGUE_SIZE)
-    
-    
+
+
 
     def identity(self, state) :
         '''
@@ -234,15 +234,15 @@ class ConversionState(object) :
             new_states[0,x] +=1
 
         return new_states
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
+
+
+
 
 
 
@@ -382,14 +382,20 @@ class Model(nn.Module) :
         super().__init__()
 
         # Fully connected layer of size 100
-        self.hidden = nn.Linear(state_dim , 100)
+        # self.hidden = nn.Linear(state_dim , 100)
         # Fully connected layer for the ouput
+        self.fc1 = nn.Linear(state_dim, 100)
+        # self.fc2 = nn.Linear(256, 128)
+        # self.fc3 = nn.Linear(128, 64)
+        # self.fc4 = nn.Linear(64, num_actions)
+
         self.output = nn.Linear(100, n_actions)
 
     def forward(self, x) :
         # Forward action to predict the outputs
-        x = self.hidden(x)
-        x = F.relu(x)
+        x = F.relu(self.fc1(x))
+        # x = F.relu(self.fc2(x))
+        # x = F.relu(self.fc3(x))
         x = self.output(x)
 
         return x
@@ -460,9 +466,9 @@ class DQAgent(object) :
         self.gamma = gamma
         self.epsilon = epsilon
         self.lr = lr
-        self.model =  model 
+        self.model =  model
         self.loss = nn.MSELoss()
-        self.optimizer = optim.SGD(self.model.parameters(), lr = lr) if optimizer == 'SGD' else optim.ASGD(self.model.parameters(), lr = lr)
+        self.optimizer = optim.SGD(self.model.parameters(), lr = lr) if optimizer == 'SGD' else optim.Adam(self.model.parameters(), lr = lr)
         self.all_loss = []
         self.distribution = np.zeros((n_actions,1))
         self.constraints = constraints
@@ -484,14 +490,14 @@ class DQAgent(object) :
         '''
         if np.random.rand() <= self.epsilon:
             # Exploration
-            if self.constraints : 
-                # Constraints on the recommendation 
-                
+            if self.constraints :
+                # Constraints on the recommendation
+
                 recommended_contents =  self.related[state]
                 index_state = random.randrange(0,len(recommended_contents),1)
                 action = recommended_contents[index_state]
-                
-            else : 
+
+            else :
                 # No constraints on the recommendation
                 return random.randrange(self.n_actions)
         else :
@@ -512,7 +518,7 @@ class DQAgent(object) :
         for exp in minibatch:
 
             self.distribution[exp.action,0] +=1
-            
+
             target = exp.reward
             if not exp.done:
                 target = (exp.reward + self.gamma * torch.max(self.model( self.convert_state(exp.next_state)  )).item())
@@ -524,7 +530,7 @@ class DQAgent(object) :
             # Fit the neural network with the new target to update the weights
             # Prediction
             prediction = self.model(self.convert_state(exp.state))
-            
+
             # Compute the loss
             current_loss = self.loss(target_f,prediction )
 
@@ -614,7 +620,7 @@ def deep_q_learning(env, state_dim, name_conversion_state, mem_size, gamma,\
         tot_reward = 0
         done = False
         tot_loss = 0
-        
+
         while not done :
             # Simulation until the user leaves
 
@@ -622,7 +628,7 @@ def deep_q_learning(env, state_dim, name_conversion_state, mem_size, gamma,\
             next_state, reward , done = env.step(state, action)
             # Add the experience in the memory
             agent.memorize(state, action, reward, next_state , done)
-            
+
             state = next_state
             tot_reward +=reward
 
@@ -632,14 +638,14 @@ def deep_q_learning(env, state_dim, name_conversion_state, mem_size, gamma,\
                 clear_output(True)
                 print("Episode: {}/{}, Reward : {}"
                           .format(e, max_iter, tot_reward))
-            
-                
+
+
 
             # Train the network
 
             current_loss = agent.learn(batch_size)
             tot_loss += current_loss
-            
+
 
 #     agent.save(name)
 

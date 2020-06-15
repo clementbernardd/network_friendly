@@ -172,3 +172,37 @@ def compare_q_tables(q_tables, names, title) :
     f.suptitle(title)
 
     plt.show()
+
+    
+    
+def compare_q_tables_dic(dic,names = ['hot_encoding','u_hot','rewards'] , gamma = 0 , isLinear = True, tranpose = False) : 
+    n = len(dic[names[0]][3][-1])
+    if isLinear : 
+        title = 'Q tables for Linear model with gamma = {} after {} epochs'.format(gamma, n)
+    else : 
+        title = 'Q tables for Fully connected model with gamma = {} after {} epochs'.format(gamma, n)
+    if tranpose : 
+        
+        compare_q_tables([dic[x][0][-1].detach().numpy().T for x in names],names,title)
+    else : 
+        compare_q_tables([dic[x][0][-1] for x in names],names,title)
+    
+def plot_results_loss_rew_dic(dic, names = ['hot_encoding','u_hot','rewards'], rm_rew = 500, rm_loss = 500, gamma = 0 ) : 
+    
+    all_loss = [dic[x][3][-1] for x in dic]
+    all_rewards = [dic[x][1][-1] for x in dic]
+    
+    param = {
+    'all_loss' : all_loss, 'rewards' : all_rewards, 'names' : names,'rm_loss' : rm_loss,'rm_reward' : rm_rew,\
+    'title' : 'Rewards and Loss for Linear model with gamma = ' + str(gamma) }
+
+    plot_different_loss(**param)
+    
+    
+    
+    
+def get_result_tables(param_deep_Q,dic = {}, names = ['hot_encoding','u_hot','rewards'], epochs = [1,5000], linear = True) : 
+    # Get the results after 5000 epochs for the given parameters
+    for x in names : 
+        dic[x] = compare_conversion(x, param_deep_Q, epochs = epochs, linear = linear)
+    
