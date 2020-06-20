@@ -17,7 +17,8 @@ CATALOGUE_SIZE = 50
 
 dict_conversion = {'identity' : 1,'hot_encoding' : CATALOGUE_SIZE , 'u' : CATALOGUE_SIZE ,\
                    'u_hot' : CATALOGUE_SIZE, 'cached' : 1 ,\
-                  'rewards' : CATALOGUE_SIZE,'valuable' :CATALOGUE_SIZE }
+                  'rewards' : CATALOGUE_SIZE,'valuable' :CATALOGUE_SIZE , 'multiple' : 3*CATALOGUE_SIZE,\
+                  'multiple_valuable' : 4*CATALOGUE_SIZE}
 
 '''Experience'''
 # A class to denote the experience which will be stored in the memory
@@ -93,6 +94,9 @@ class ConversionState(object) :
         self.env = env
         self.valuable_representation = self.valuable_actions(env)
         self.conversion = self.choose_function(name_function)
+        self.multiple_representation = self.convert_multiple(env)
+        self.multiple_val_representation = self.convert_multiple_val(env)
+
 
 
     def choose_function(self,name_function) :
@@ -111,6 +115,34 @@ class ConversionState(object) :
             return self.convert_reward
         elif name_function == 'valuable' :
             return self.valuable
+        elif name_function == 'multiple' :
+            return self.multiple
+        elif name_function =='multiple_valuable' :
+            return self.multiple_valuable
+
+
+    def multiple_valuable(self, state) :
+        '''
+        Input : An integer that represents the state
+        Output : A new representation of the state. For each action, we encode it as :
+        (a,b,c,d) where a = 0 if not cached not related, 1 otherwise
+                b = 1 if the action is related, 0 otherwise
+                c = 1 if the action is cached, 0 otherwise
+                d is incremented each time the next action has related contents cached
+        '''
+        return self.multiple_val_representation[state].view(1,-1 )
+
+    def multiple(self, state) :
+        '''
+        Input : An integer that represents the state
+        Output : A new representation of the state. For each action, we encode it as :
+        (a,b,c) where a = 0 if not cached not related, 1 otherwise
+                b = 1 if the action is related, 0 otherwise
+                c = 1 if the action is cached, 0 otherwise
+        '''
+
+        return self.multiple_representation[state].view(1,-1)
+
 
 
     def valuable_actions(self,env) :
@@ -234,6 +266,77 @@ class ConversionState(object) :
             new_states[0,x] +=1
 
         return new_states
+
+
+    def convert_multiple(self, env) :
+
+        related = env.recommended
+        cost = env.cost
+
+        representation = torch.zeros((CATALOGUE_SIZE , CATALOGUE_SIZE,3), dtype = torch.float)
+
+        for i in range(CATALOGUE_SIZE) :
+            for j in range(CATALOGUE_SIZE) :
+
+                is_related = j in related[i]
+                is_cached = cost[j] == 0
+
+
+                if (not is_cached) and (not is_cached ):
+                    representation[i][j][0] = 1
+                else :
+                    representation[i][j][0] = 0
+                if is_related :
+                    representation[i][j][1] = 1
+                else :
+                    representation[i][j][1] = 0
+
+                if is_cached :
+                    representation[i][j][2] = 1
+                else :
+                    representation[i][j][2] = 0
+
+
+        return representation.view(-1, 3 * CATALOGUE_SIZE)
+
+
+    def convert_multiple_val(self, env) :
+
+        related = env.recommended
+        cost = env.cost
+
+        representation = torch.zeros((CATALOGUE_SIZE , CATALOGUE_SIZE,4), dtype = torch.float)
+
+        for i in range(CATALOGUE_SIZE) :
+            for j in range(CATALOGUE_SIZE) :
+
+                is_related = j in related[i]
+                is_cached = cost[j] == 0
+
+
+                if (not is_cached) and (not is_cached ):
+                    representation[i][j][0] = 1
+                else :
+                    representation[i][j][0] = 0
+                if is_related :
+                    representation[i][j][1] = 1
+                else :
+                    representation[i][j][1] = 0
+
+                if is_cached :
+                    representation[i][j][2] = 1
+                else :
+                    representation[i][j][2] = 0
+
+                representation[i][j][3] = 0
+
+                for k in related[j] :
+                    if cost[k] == 0 :
+                        representation[i][j][3] += 1
+
+
+
+        return representation.view(-1, 4 * CATALOGUE_SIZE)
 
 
 
@@ -382,20 +485,16 @@ class Model(nn.Module) :
         super().__init__()
 
         # Fully connected layer of size 100
-        # self.hidden = nn.Linear(state_dim , 100)
+        self.hidden = nn.Linear(state_dim , 300)
         # Fully connected layer for the ouput
-        self.fc1 = nn.Linear(state_dim, 100)
-        # self.fc2 = nn.Linear(256, 128)
-        # self.fc3 = nn.Linear(128, 64)
-        # self.fc4 = nn.Linear(64, num_actions)
+        # self.fc1 = nn.Linear(256,128)
 
-        self.output = nn.Linear(100, n_actions)
+        self.output = nn.Linear(300, n_actions)
 
     def forward(self, x) :
         # Forward action to predict the outputs
-        x = F.relu(self.fc1(x))
-        # x = F.relu(self.fc2(x))
-        # x = F.relu(self.fc3(x))
+        x = F.relu(self.hidden(x))
+        # x = F.relu(self.fc1(x))
         x = self.output(x)
 
         return x
@@ -451,7 +550,8 @@ class DQAgent(object) :
 
         Attributes :
 
-        model : The Q_value approximator which is a Neural Network
+        policy_net : The Q_value approximator which is a Neural Network
+        target_net : The target Network which we would update in a regular timestep
         memory : The Memory to store the experiences
         loss : The loss used for the learning. By default MSE
         optimizer : The optimizer used to update the weights
@@ -466,9 +566,10 @@ class DQAgent(object) :
         self.gamma = gamma
         self.epsilon = epsilon
         self.lr = lr
-        self.model =  model
+        self.policy_net =  model
+        self.target_net = model
         self.loss = nn.MSELoss()
-        self.optimizer = optim.SGD(self.model.parameters(), lr = lr) if optimizer == 'SGD' else optim.Adam(self.model.parameters(), lr = lr)
+        self.optimizer = optim.SGD(self.policy_net.parameters(), lr = lr) if optimizer == 'SGD' else optim.Adam(self.policy_net.parameters(), lr = lr)
         self.all_loss = []
         self.distribution = np.zeros((n_actions,1))
         self.constraints = constraints
@@ -503,33 +604,38 @@ class DQAgent(object) :
         else :
             # Exploitation
             with torch.no_grad() :
-                act_values = self.model(self.convert_state(state))
+                act_values = self.policy_net(self.convert_state(state))
             return torch.argmax(act_values).int().item()
 
-    def learn(self, batch_size) :
+    def learn(self, batch_size, update) :
         '''
         Fit the network with a batch of experiences
         Compute the target from this batch
         The target is computed as follows : r + gamma * max(Q(s',a'))
+        If 'update' is True, then update the target network
         '''
         minibatch = self.memory.sample(batch_size)
         # Loop over the batch
         batch_loss = 0
+        if update :
+            # Update the target network
+            self.target_net.load_state_dict(self.policy_net.state_dict())
+
         for exp in minibatch:
 
             self.distribution[exp.action,0] +=1
 
             target = exp.reward
             if not exp.done:
-                target = (exp.reward + self.gamma * torch.max(self.model( self.convert_state(exp.next_state)  )).item())
+                target = (exp.reward + self.gamma * torch.max(self.target_net( self.convert_state(exp.next_state)  )).item())
             # Compute the prediction
             with torch.no_grad() :
-                target_f = self.model(self.convert_state(exp.state)  )
+                target_f = self.target_net(self.convert_state(exp.state)  )
             # Replace the prediction by the target
             target_f[0,exp.action] = target
             # Fit the neural network with the new target to update the weights
             # Prediction
-            prediction = self.model(self.convert_state(exp.state))
+            prediction = self.policy_net(self.convert_state(exp.state))
 
             # Compute the loss
             current_loss = self.loss(target_f,prediction )
@@ -561,7 +667,7 @@ class DQAgent(object) :
         q_table = torch.zeros(n, CATALOGUE_SIZE , dtype = torch.float )
         for i in range(n) :
             with torch.no_grad() :
-                q_table[i,:] = self.model(self.convert_state(states[i]))[0]
+                q_table[i,:] = self.policy_net(self.convert_state(states[i]))[0]
         return q_table
 
 
@@ -581,7 +687,7 @@ class DQAgent(object) :
 ''' Deep Q Learning Algorithm '''
 
 def deep_q_learning(env, state_dim, name_conversion_state, mem_size, gamma,\
-                    epsilon, learning_rate,max_iter,batch_size ,name, model = None, constraints = False, optimizer = 'SGD') :
+                    epsilon, learning_rate,max_iter,batch_size ,name, model = None, constraints = False, optimizer = 'SGD',update_target = 5) :
     """
     DEEP Q LEARNING ALGORITHM
 
@@ -597,6 +703,8 @@ def deep_q_learning(env, state_dim, name_conversion_state, mem_size, gamma,\
     batch_size : The size of the batch which is used to train the network
     name : The name where will be saved the model
     constraints : Boolean to say whether or not we add constraints on the recommendation
+    update_target : Time to update the target network
+
 
     Returns :
 
@@ -620,6 +728,7 @@ def deep_q_learning(env, state_dim, name_conversion_state, mem_size, gamma,\
         tot_reward = 0
         done = False
         tot_loss = 0
+        update_time = 0
 
         while not done :
             # Simulation until the user leaves
@@ -643,7 +752,16 @@ def deep_q_learning(env, state_dim, name_conversion_state, mem_size, gamma,\
 
             # Train the network
 
-            current_loss = agent.learn(batch_size)
+            if update_time >= update_target :
+                # Update the target
+                    current_loss = agent.learn(batch_size, True)
+                    update_time = 0
+            else :
+                # Continue without updating the target
+                    current_loss = agent.learn(batch_size, False)
+                    # Add one to timestep to update the time for the target network
+                    update_time +=1
+
             tot_loss += current_loss
 
 
