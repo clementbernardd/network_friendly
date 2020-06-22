@@ -11,4 +11,18 @@ Project semester with Jade BONNET
 - FinalReport : Directory with the Final Report that explains our project in detail in LaTeX.
 - Reports : This is the temporary report we did each week of the work.
 - code : Our code
- 
+
+## Requirements
+
+- Python 3.5
+- Pytorch 0.4 +
+
+## Getting started
+
+`git clone https://github.com/clementbernardd/network_friendly.git`
+
+
+## Author
+
+Clement Bernard / <a href="https://github.com/clementbernardd"></a>
+Jade Bonnet 
