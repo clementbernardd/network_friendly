@@ -1,0 +1,94 @@
+\babel@toc {english}{}
+\contentsline {section}{\numberline {1}Introduction}{2}{section.1}%
+\contentsline {section}{\numberline {2}Problem}{2}{section.2}%
+\contentsline {paragraph}{Catalogue}{2}{section*.2}%
+\contentsline {paragraph}{Recommendation System}{2}{section*.3}%
+\contentsline {paragraph}{Caching cost}{2}{section*.4}%
+\contentsline {paragraph}{User models}{2}{section*.5}%
+\contentsline {paragraph}{Recommendation process}{3}{section*.6}%
+\contentsline {section}{\numberline {3}Reinforcement learning}{3}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Definition}{3}{subsection.3.1}%
+\contentsline {paragraph}{Reinforcement learning}{3}{section*.7}%
+\contentsline {subsection}{\numberline {3.2}Elements of Reinforcement Learning}{3}{subsection.3.2}%
+\contentsline {subsubsection}{\numberline {3.2.1}Markov Decision Processes}{3}{subsubsection.3.2.1}%
+\contentsline {paragraph}{Agent}{3}{section*.8}%
+\contentsline {paragraph}{Environment}{3}{section*.9}%
+\contentsline {paragraph}{Reward}{3}{section*.10}%
+\contentsline {paragraph}{Action}{3}{section*.11}%
+\contentsline {paragraph}{State}{3}{section*.12}%
+\contentsline {paragraph}{}{4}{section*.13}%
+\contentsline {paragraph}{}{4}{section*.15}%
+\contentsline {subsubsection}{\numberline {3.2.2}Returns, policy and value function}{4}{subsubsection.3.2.2}%
+\contentsline {paragraph}{Return}{4}{section*.16}%
+\contentsline {paragraph}{Expected return}{4}{section*.17}%
+\contentsline {paragraph}{Policy }{5}{section*.18}%
+\contentsline {paragraph}{Value function}{5}{section*.19}%
+\contentsline {paragraph}{Action-value function}{5}{section*.20}%
+\contentsline {section}{\numberline {4}Q-Learning}{5}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Optimality}{5}{subsection.4.1}%
+\contentsline {paragraph}{}{5}{section*.21}%
+\contentsline {paragraph}{Order in term of policy}{5}{section*.22}%
+\contentsline {paragraph}{Optimal policy}{5}{section*.23}%
+\contentsline {subsection}{\numberline {4.2}Bellman optimality equations}{5}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}Q learning algorithm}{6}{subsection.4.3}%
+\contentsline {paragraph}{}{6}{section*.24}%
+\contentsline {subsection}{\numberline {4.4}Exploration and Exploitation ($\epsilon $-greedy)}{7}{subsection.4.4}%
+\contentsline {subsection}{\numberline {4.5}Convergence criteria}{7}{subsection.4.5}%
+\contentsline {subsection}{\numberline {4.6}Hyperparameters}{7}{subsection.4.6}%
+\contentsline {subsection}{\numberline {4.7}Results}{8}{subsection.4.7}%
+\contentsline {subsubsection}{\numberline {4.7.1}Q-table}{8}{subsubsection.4.7.1}%
+\contentsline {paragraph}{}{9}{section*.27}%
+\contentsline {paragraph}{}{9}{section*.28}%
+\contentsline {subsubsection}{\numberline {4.7.2}Discounted $\gamma $ parameter}{9}{subsubsection.4.7.2}%
+\contentsline {paragraph}{}{9}{section*.29}%
+\contentsline {paragraph}{}{9}{section*.31}%
+\contentsline {subsubsection}{\numberline {4.7.3}Rewards and penalties}{10}{subsubsection.4.7.3}%
+\contentsline {paragraph}{Rewards}{10}{section*.32}%
+\contentsline {paragraph}{Penalties}{10}{section*.33}%
+\contentsline {paragraph}{}{10}{section*.34}%
+\contentsline {paragraph}{}{10}{section*.36}%
+\contentsline {subsubsection}{\numberline {4.7.4}Specific user}{11}{subsubsection.4.7.4}%
+\contentsline {subsubsection}{\numberline {4.7.5}Time of convergence}{12}{subsubsection.4.7.5}%
+\contentsline {paragraph}{Criteria of convergence}{12}{section*.38}%
+\contentsline {paragraph}{Time of convergence}{12}{section*.40}%
+\contentsline {paragraph}{}{12}{section*.42}%
+\contentsline {section}{\numberline {5}Deep Q-learning}{13}{section.5}%
+\contentsline {subsection}{\numberline {5.1}Function approximation}{13}{subsection.5.1}%
+\contentsline {paragraph}{}{13}{section*.43}%
+\contentsline {subsection}{\numberline {5.2}Training part}{13}{subsection.5.2}%
+\contentsline {paragraph}{}{13}{section*.45}%
+\contentsline {paragraph}{Target}{14}{section*.46}%
+\contentsline {paragraph}{Loss}{14}{section*.47}%
+\contentsline {paragraph}{Memory replay}{14}{section*.48}%
+\contentsline {subsection}{\numberline {5.3}State representation}{15}{subsection.5.3}%
+\contentsline {paragraph}{}{15}{section*.50}%
+\contentsline {paragraph}{One hot encoding }{15}{section*.51}%
+\contentsline {paragraph}{U matrix }{15}{section*.52}%
+\contentsline {paragraph}{Rewards}{15}{section*.53}%
+\contentsline {paragraph}{Valuable }{15}{section*.54}%
+\contentsline {paragraph}{}{16}{section*.55}%
+\contentsline {subsection}{\numberline {5.4}Algorithm}{17}{subsection.5.4}%
+\contentsline {subsection}{\numberline {5.5}Results}{17}{subsection.5.5}%
+\contentsline {paragraph}{Environment}{17}{section*.58}%
+\contentsline {paragraph}{Q-learning results}{17}{section*.60}%
+\contentsline {subsubsection}{\numberline {5.5.1}Linear model}{18}{subsubsection.5.5.1}%
+\contentsline {paragraph}{}{18}{section*.62}%
+\contentsline {paragraph}{Rewards}{19}{section*.63}%
+\contentsline {paragraph}{Loss}{19}{section*.65}%
+\contentsline {paragraph}{Q-tables}{20}{section*.67}%
+\contentsline {subsubsection}{\numberline {5.5.2}Fully connected model}{21}{subsubsection.5.5.2}%
+\contentsline {paragraph}{}{21}{section*.69}%
+\contentsline {paragraph}{Architecture}{21}{section*.70}%
+\contentsline {paragraph}{Rewards and loss}{21}{section*.71}%
+\contentsline {paragraph}{Q-tables}{21}{section*.73}%
+\contentsline {paragraph}{Limits}{22}{section*.75}%
+\contentsline {section}{\numberline {6}Double Q-learning}{22}{section.6}%
+\contentsline {paragraph}{Target network}{22}{section*.76}%
+\contentsline {subsection}{\numberline {6.1}State representation}{23}{subsection.6.1}%
+\contentsline {subsubsection}{\numberline {6.1.1}Multiple}{23}{subsubsection.6.1.1}%
+\contentsline {subsubsection}{\numberline {6.1.2}Multiple valuable}{23}{subsubsection.6.1.2}%
+\contentsline {subsection}{\numberline {6.2}Improvement}{24}{subsection.6.2}%
+\contentsline {subsection}{\numberline {6.3}Results}{24}{subsection.6.3}%
+\contentsline {subsubsection}{\numberline {6.3.1}Rewards and Loss}{24}{subsubsection.6.3.1}%
+\contentsline {subsubsection}{\numberline {6.3.2}Q-table}{25}{subsubsection.6.3.2}%
+\contentsline {section}{\numberline {7}Conclusion}{26}{section.7}%

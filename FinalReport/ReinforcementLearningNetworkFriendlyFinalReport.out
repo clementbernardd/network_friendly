@@ -1,0 +1,37 @@
+\BOOKMARK [1][-]{section.1}{Introduction}{}% 1
+\BOOKMARK [1][-]{section.2}{Problem}{}% 2
+\BOOKMARK [1][-]{section.3}{Reinforcement learning}{}% 3
+\BOOKMARK [2][-]{subsection.3.1}{Definition}{section.3}% 4
+\BOOKMARK [2][-]{subsection.3.2}{Elements of Reinforcement Learning}{section.3}% 5
+\BOOKMARK [3][-]{subsubsection.3.2.1}{Markov Decision Processes}{subsection.3.2}% 6
+\BOOKMARK [3][-]{subsubsection.3.2.2}{Returns, policy and value function}{subsection.3.2}% 7
+\BOOKMARK [1][-]{section.4}{Q-Learning}{}% 8
+\BOOKMARK [2][-]{subsection.4.1}{Optimality}{section.4}% 9
+\BOOKMARK [2][-]{subsection.4.2}{Bellman optimality equations}{section.4}% 10
+\BOOKMARK [2][-]{subsection.4.3}{Q learning algorithm}{section.4}% 11
+\BOOKMARK [2][-]{subsection.4.4}{Exploration and Exploitation \(-greedy\)}{section.4}% 12
+\BOOKMARK [2][-]{subsection.4.5}{Convergence criteria}{section.4}% 13
+\BOOKMARK [2][-]{subsection.4.6}{Hyperparameters}{section.4}% 14
+\BOOKMARK [2][-]{subsection.4.7}{Results}{section.4}% 15
+\BOOKMARK [3][-]{subsubsection.4.7.1}{Q-table}{subsection.4.7}% 16
+\BOOKMARK [3][-]{subsubsection.4.7.2}{Discounted \040parameter}{subsection.4.7}% 17
+\BOOKMARK [3][-]{subsubsection.4.7.3}{Rewards and penalties}{subsection.4.7}% 18
+\BOOKMARK [3][-]{subsubsection.4.7.4}{Specific user}{subsection.4.7}% 19
+\BOOKMARK [3][-]{subsubsection.4.7.5}{Time of convergence}{subsection.4.7}% 20
+\BOOKMARK [1][-]{section.5}{Deep Q-learning}{}% 21
+\BOOKMARK [2][-]{subsection.5.1}{Function approximation}{section.5}% 22
+\BOOKMARK [2][-]{subsection.5.2}{Training part}{section.5}% 23
+\BOOKMARK [2][-]{subsection.5.3}{State representation}{section.5}% 24
+\BOOKMARK [2][-]{subsection.5.4}{Algorithm}{section.5}% 25
+\BOOKMARK [2][-]{subsection.5.5}{Results}{section.5}% 26
+\BOOKMARK [3][-]{subsubsection.5.5.1}{Linear model}{subsection.5.5}% 27
+\BOOKMARK [3][-]{subsubsection.5.5.2}{Fully connected model}{subsection.5.5}% 28
+\BOOKMARK [1][-]{section.6}{Double Q-learning}{}% 29
+\BOOKMARK [2][-]{subsection.6.1}{State representation}{section.6}% 30
+\BOOKMARK [3][-]{subsubsection.6.1.1}{Multiple}{subsection.6.1}% 31
+\BOOKMARK [3][-]{subsubsection.6.1.2}{Multiple valuable}{subsection.6.1}% 32
+\BOOKMARK [2][-]{subsection.6.2}{Improvement}{section.6}% 33
+\BOOKMARK [2][-]{subsection.6.3}{Results}{section.6}% 34
+\BOOKMARK [3][-]{subsubsection.6.3.1}{Rewards and Loss}{subsection.6.3}% 35
+\BOOKMARK [3][-]{subsubsection.6.3.2}{Q-table}{subsection.6.3}% 36
+\BOOKMARK [1][-]{section.7}{Conclusion}{}% 37
