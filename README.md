@@ -8,9 +8,10 @@ Project semester with Jade BONNET
 
 ## Contents
 
-- FinalReport : Directory with the Final Report that explains our project in detail in LaTeX.
-- Reports : This is the temporary report we did each week of the work.
+- final_report : Directory with the Final Report that explains our project in detail in LaTeX.
+- reports : This is the temporary report we did each week of the work.
 - code : Our code
+- presentation : Directory where there is slides where we presented the project
 
 ## Requirements
 
