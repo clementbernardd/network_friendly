@@ -24,5 +24,6 @@ Project semester with Jade BONNET
 
 ## Author
 
-Clement Bernard / <a href="https://github.com/clementbernardd"></a>
-Jade Bonnet 
+- Clement Bernard / <a href="https://github.com/clementbernardd">Clement</a>
+
+- Jade Bonnet
